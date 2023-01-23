@@ -23,7 +23,7 @@ There are non-standard overloads of `insert` accepting a key rather than a full 
 `operator[]` is not provided. `erase([const_]iterator)` is logically replaced by
 `erase([const_]accessor)`.
 
-Besides `find`, `insert`, `emplace` and `erase`, additional functionality is provided _without
+`rehash` is concurrency-safe. Additional functionality is provided _without
 concurrency guarantees_:
 * iterators,
 * assignment,
@@ -65,3 +65,43 @@ providing iterators and an interface more or less equivalent to that of `std::un
 This functionality is meant to support scenarios such as concurrent population followed by
 non-concurrent usage, for instance.
 
+### `std::concurrent_unordered_map` proposal
+
+[P0652R3](https://wg21.link/p0652r3) proposes an interface for an (as of yet not accepted)
+`std::concurrent_unordered_map` container. `std::concurrent_unordered_map` does not have
+iterators. The concurrency-safe lookup/modify interface is split into _visitation member
+functions_ (accepting a user-provided functor for access to the elements) and non-visitation
+member functions. The visitation interface is as follows:
+* `void visit(const key_type&, Visitor&)` (const and non-const)
+* `void visit_all(Visitor&)`  (const and non-const)
+* `bool visit_or_emplace(K&&, Visitor&, Args&&...)` (non-const only)
+
+Visitors are passed const/non-const references to the mapped value type depending on
+whether the const or non-const version of the member function is used, respectively
+—internally, this implies that either shared or exclusive locking is used.
+`visit_all` also passes a `const key_type&` to the visitor.
+`visit_or_emplace` only calls the visitor if an equivalent element already existed,
+and returns `true` iff the element has been newly created. 
+
+The non-visitation interface is:
+* `optional<mapped_type> find(const key_type&)`
+* `mapped_type find(const key_type&, Args&&...)`
+* `bool emplace(K&& key, Args&&...)`
+* `bool insert_or_assign(K&&,Args&&...)`
+* `size_type update(const key_type&,Args&&...)`
+* `size_type erase(const key_type&)`
+
+`mapped_type find(const key_type& key, Args&&... args)` returns a copy of the mapped value type
+of the element with equivalent to `key`, if it exists, and else it returns a `mapped_type`
+constructed from `args...`: the intended usage of this member function escapes
+the author of these notes. `emplace` and `insert_or_assign` behave as
+the homonyms in `std::unordered_map` except that they don't return an iterator.
+`update` replaces the mapped value type of the looked-up element and does
+nothing otherwise (that is, it does not create an element like is the case
+with `insert_or_assign`); as it happens, `update` can be implemented as a
+wrapper over non-const `void visit(const key_type&, Visitor&)`.
+`operator[]` is not provided.
+
+All operations of `std::concurrent_unordered_map` are concurrency-safe,
+including assignment, `merge`, `swap` and `clear`. No rehashing facilities
+are provided.
