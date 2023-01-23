@@ -109,8 +109,8 @@ including assignment, `merge`, `swap` and `clear`. No rehashing facilities
 are provided.
 
 `make_unordered_map_view(bool)` returns an `unordered_map_view` over the underlying
-data structure (with or without blocking of other concurrent access to the
-parent `concurrent_unordered_map`, as specified by the `bool` parameter).
+data structure (the `bool` parameter specifies whether concurrent accesses to
+the parent `concurrent_unordered_map` are blocked or not).
 `unordered_map_view` interface mimics that of `std::unordered_map`, without the
 usual construction and assignment operations, and with some
 deviations on _"iterator invalidation requirements, load_factor functions, `size()`
@@ -130,5 +130,6 @@ with local iterators.
 |`clear`, `swap`|unsafe|safe|safe|
 |`size`, `count`, `empty`|safe|safe|no|
 |`operator[]`|no|no|no|
-|Lookup/modify interface|Adapted classical interface plus<br>accessor-based overloads|Adapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|Adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
+|Lookup/modify interface|adapted classical interface plus<br>accessor-based overloads|sdapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
+|Parallel iteration|with splittable ranges<br/><sup>(unsafe)</sup>|no explicit support|no explicit support|
 |Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|
