@@ -18,8 +18,8 @@ are const (shared lock) and non-const (exclusive lock) accessors. Member functio
 `find`, `insert`, `emplace` have additional overloads accepting accessors. Rather than returning
 iterators, these functions return a `bool` (indicating if the element was found in the case
 of `find`, or whether the element has been inserted in the case of `insert` and `emplace`).
-There are non-standard overloads of `insert` accepting a key rather than a full value (so,
-`insert(acc, k)` behaves approximately as `try_emplace(acc, k, mapped_type())`).
+There are non-standard overloads of `insert` accepting a key rather than a full value —so,
+`insert(acc, k)` behaves as (non-existent) `try_emplace(acc, k)`.
 `operator[]` is not provided. `erase([const_]iterator)` is logically replaced by
 `erase([const_]accessor)`.
 
@@ -60,7 +60,7 @@ is never erased. `operator[]` is not provided.
 Assignment is not concurrency-safe. `rehash`, `reserve` and `clear`, on the other hand,
 can be called in a concurrent scenario.
 
-`lock_table` blocks all concurrent accesses and provides a [`locked_table`](https://efficient.github.io/libcuckoo/classlibcuckoo_1_1cuckoohash__map_1_1locked__table.html) view over the underlying data structure
+`lock_table` blocks all concurrent accesses and returns a [`locked_table`](https://efficient.github.io/libcuckoo/classlibcuckoo_1_1cuckoohash__map_1_1locked__table.html) view over the underlying data structure
 providing iterators and an interface more or less equivalent to that of `std::unordered_map`.
 This functionality is meant to support scenarios such as concurrent population followed by
 non-concurrent usage, for instance.
