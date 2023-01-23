@@ -87,15 +87,15 @@ The non-visitation interface is:
 * `optional<mapped_type> find(const key_type&)`
 * `mapped_type find(const key_type&, Args&&...)`
 * `bool emplace(K&& key, Args&&...)`
-* `bool insert_or_assign(K&&,Args&&...)`
-* `size_type update(const key_type&,Args&&...)`
+* `bool insert_or_assign(K&&, Args&&...)`
+* `size_type update(const key_type&, Args&&...)`
 * `size_type erase(const key_type&)`
 
 `mapped_type find(const key_type& key, Args&&... args)` returns a copy of the mapped value type
 of the element with equivalent to `key`, if it exists, and else it returns a `mapped_type`
 constructed from `args...`: the intended usage of this member function escapes
 the author of these notes. `emplace` and `insert_or_assign` behave as
-the homonyms in `std::unordered_map` except that they don't return an iterator.
+their homonyms in `std::unordered_map` except that they don't return an iterator.
 `update` replaces the mapped value type of the looked-up element and does
 nothing otherwise (that is, it does not create an element like is the case
 with `insert_or_assign`); as it happens, `update` can be implemented as a
