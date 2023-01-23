@@ -23,8 +23,8 @@ There are non-standard overloads of `insert` accepting a key rather than a full 
 `operator[]` is not provided. `erase([const_]iterator)` is logically replaced by
 `erase([const_]accessor)`.
 
-`rehash` is concurrency-safe. Additional functionality is provided _without
-concurrency guarantees_:
+`rehash` is thread-safe. Additional functionality is provided _without
+thread safety guarantees_:
 * iterators,
 * assignment,
 * `clear` and `swap`.
@@ -32,13 +32,13 @@ concurrency guarantees_:
 Parallel iteration is served through [_container ranges_](https://spec.oneapi.io/versions/latest/elements/oneTBB/source/named_requirements/containers/container_range.html),
 which behave like C++17 ranges but provide additional splitting functionalities to
 distribute the range load traversal across threads. Parallel iteration is
-not concurrency-safe, that is, when parallel-iterating a container no other
+not thread-safe, that is, when parallel-iterating a container no other
 operations can be performed on the container.
 
 ### libcuckoo
 
 [`libcuckoo::cuckoohash_map`](https://efficient.github.io/libcuckoo/classlibcuckoo_1_1cuckoohash__map.html)
-does not have iterators. The concurrency-safe lookup/modify interface is as follows:
+does not have iterators. The thread-safe lookup/modify interface is as follows:
 * `mapped_type find(const K&)`, `bool find(const Key&, mapped_type&)`, `bool find_fn(const K&, F)`
 * `bool contains(const K&)`
 * `bool insert(K&&, Args&&...)`, `bool insert_or_assign(K&&, V&&)`
@@ -57,7 +57,7 @@ whether the element has been newly created or was preexistent: the function can 
 if the elements is to be erased. `upsert` is a variation of `uprase_fn` where the element
 is never erased. `operator[]` is not provided.
 
-Assignment is not concurrency-safe. `rehash`, `reserve` and `clear`, on the other hand,
+Assignment is not thread-safe. `rehash`, `reserve`, `clear` and `swap`, on the other hand,
 can be called in a concurrent scenario.
 
 `lock_table` blocks all concurrent accesses and returns a [`locked_table`](https://efficient.github.io/libcuckoo/classlibcuckoo_1_1cuckoohash__map_1_1locked__table.html) view over the underlying data structure
@@ -71,7 +71,7 @@ non-concurrent usage, for instance.
 `std::concurrent_unordered_map` container. `std::concurrent_unordered_map` does not have
 iterators. More controversially, it also omits `size`, `count` and `empty` on the grounds
 that, in a multithreaded scenario, the values returned can not be trusted.
-The concurrency-safe lookup/modify interface is split into _visitation member
+The thread-safe lookup/modify interface is split into _visitation member
 functions_ (accepting a user-provided functor for access to the elements) and non-visitation
 member functions. The visitation interface is as follows:
 * `void visit(const key_type&, Visitor&)` (const and non-const)
@@ -104,7 +104,7 @@ with `insert_or_assign`); as it happens, `update` can be implemented as a
 wrapper over non-const `void visit(const key_type&, Visitor&)`.
 `operator[]` is not provided.
 
-All operations of `std::concurrent_unordered_map` are concurrency-safe,
+All operations of `std::concurrent_unordered_map` are thread-safe,
 including assignment, `merge`, `swap` and `clear`. No rehashing facilities
 are provided.
 
@@ -112,10 +112,23 @@ are provided.
 data structure (with or without blocking of other concurrent access to the
 parent `concurrent_unordered_map`, as specified by the `bool` parameter).
 `unordered_map_view` interface mimics that of `std::unordered_map`, without the
-usual construction and assignment operatios, and with some
+usual construction and assignment operations, and with some
 deviations on _"iterator invalidation requirements, load_factor functions, `size()`
 complexity requirements, buckets and node operations"_ —the proposal, which is
 clearly incomplete, gets rather vague at this point, as these deviations are not
-explained, and the synopsis offered includes funcionality tyipically associated
+explained, and the synopsis offered includes funcionality typically associated
 to closed-addressing implementations, like a full-fledged bucket interface
 with local iterators.
+
+### Comparison table
+
+|  |oneTBB|libcuckoo|`std::concurrent_unordered_map`<br/> proposal|
+|:--|:-:|:-:|:-:|
+|Iterators|unsafe|no|no<br/><sup>(whole container traversal with `visit_all`)</sup>|
+|Assignment|unsafe|unsafe|safe|
+|Rehash|safe|safe|no|
+|`clear`, `swap`|unsafe|safe|safe|
+|`size`, `count`, `empty`|safe|safe|no|
+|`operator[]`|no|no|no|
+|Lookup/modify interface|Adapted classical interface plus<br>accessor-based overloads|Adapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|Adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
+|Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|
