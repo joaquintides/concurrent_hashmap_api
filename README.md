@@ -6,8 +6,8 @@
 
 [`oneapi::tbb::concurrent_hash_map`](https://spec.oneapi.io/versions/latest/elements/oneTBB/source/containers/concurrent_hash_map_cls.html)
 introduces the notion of [_accessors_](https://spec.oneapi.io/versions/latest/elements/oneTBB/source/containers/concurrent_hash_map_cls/accessors.html),
-objects with smart pointer semantics
-that provide locked access to a given element. For instance, the following:
+objects with smart pointer semantics that provide locked access to a given element.
+For instance, the following:
 ```cpp
 tbb_map_type::accessor acc;
 map.emplace(acc, key, 0);
@@ -18,8 +18,12 @@ are const (shared lock) and non-const (exclusive lock) accessors. Member functio
 `find`, `insert`, `emplace` have additional overloads accepting accessors. Rather than returning
 iterators, these functions return a `bool` (indicating if the element was found in the case
 of `find`, or whether the element has been inserted in the case of `insert` and `emplace`).
+There are non-standard overloads of `insert` accepting a key rather than a full value (so,
+`insert(acc, k)` behaves approximately as `try_emplace(acc, k, mapped_type())`).
+`operator[]` is not provided. `erase([const_]iterator)` is logically replaced by
+`erase([const_]accessor)`.
 
-Besides `find`, `insert` and `emplace`, additional functionality is provided _without
+Besides `find`, `insert`, `emplace` and `erase`, additional functionality is provided _without
 concurrency guarantees_:
 * iterators,
 * assignment,
@@ -51,7 +55,7 @@ mapped value. `uprase_fn` behaves like `std::unordered_map::try_emplace`, but ad
 passes a reference to the mapped value to the user-provided function, along with information on
 whether the element has been newly created or was preexistent: the function can further indicate
 if the elements is to be erased. `upsert` is a variation of `uprase_fn` where the element
-is never erased.
+is never erased. `operator[]` is not provided.
 
 Assignment is not concurrency-safe. `rehash`, `reserve` and `clear`, on the other hand,
 can be called in a concurrent scenario.
