@@ -69,7 +69,9 @@ non-concurrent usage, for instance.
 
 [P0652R3](https://wg21.link/p0652r3) proposes an interface for an (as of yet not accepted)
 `std::concurrent_unordered_map` container. `std::concurrent_unordered_map` does not have
-iterators. The concurrency-safe lookup/modify interface is split into _visitation member
+iterators. More controversially, it also omits `size`, `count` and `empty` on the grounds
+that, in a multithreaded scenario, the values returned can not be trusted.
+The concurrency-safe lookup/modify interface is split into _visitation member
 functions_ (accepting a user-provided functor for access to the elements) and non-visitation
 member functions. The visitation interface is as follows:
 * `void visit(const key_type&, Visitor&)` (const and non-const)
@@ -105,3 +107,15 @@ wrapper over non-const `void visit(const key_type&, Visitor&)`.
 All operations of `std::concurrent_unordered_map` are concurrency-safe,
 including assignment, `merge`, `swap` and `clear`. No rehashing facilities
 are provided.
+
+`make_unordered_map_view(bool)` returns an `unordered_map_view` over the underlying
+data structure (with or without blocking of other concurrent access to the
+parent `concurrent_unordered_map`, as specified by the `bool` parameter).
+`unordered_map_view` interface mimics that of `std::unordered_map`, without the
+usual construction and assignment operatios, and with some
+deviations on _"iterator invalidation requirements, load_factor functions, `size()`
+complexity requirements, buckets and node operations"_ —the proposal, which is
+clearly incomplete, gets rather vague at this point, as these deviations are not
+explained, and the synopsis offered includes funcionality tyipically associated
+to closed-addressing implementations, like a full-fledged bucket interface
+with local iterators.
