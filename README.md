@@ -93,7 +93,7 @@ The non-visitation interface is:
 * `size_type update(const key_type&, Args&&...)`
 * `size_type erase(const key_type&)`
 
-`mapped_type find(const key_type& key, Args&&... args)` returns a copy of the mapped value type
+`find(key, args...)` returns a copy of the mapped value type
 of the element with equivalent to `key`, if it exists, and else it returns a `mapped_type`
 constructed from `args...`: the intended usage of this member function escapes
 the author of these notes. `emplace` and `insert_or_assign` behave as
@@ -108,8 +108,8 @@ All operations of `std::concurrent_unordered_map` are thread-safe,
 including assignment, `merge`, `swap` and `clear`. No rehashing facilities
 are provided.
 
-`make_unordered_map_view(bool)` returns an `unordered_map_view` over the underlying
-data structure (the `bool` parameter specifies whether concurrent accesses to
+`make_unordered_map_view(lock)` returns an `unordered_map_view` over the underlying
+data structure (the `bool` parameter `lock` specifies whether concurrent accesses to
 the parent `concurrent_unordered_map` are blocked or not).
 `unordered_map_view` interface mimics that of `std::unordered_map`, without the
 usual construction and assignment operations, and with some
@@ -120,16 +120,60 @@ explained, and the synopsis offered includes funcionality typically associated
 to closed-addressing implementations, like a full-fledged bucket interface
 with local iterators.
 
+### gtl 
+
+[gtl parallel hash containers](https://github.com/greg7mdp/gtl/blob/main/docs/phmap.md)
+include not only concurrent maps, but also concurrent sets, and node-based variations of those:
+for brevity, the rest of the discussion focuses on `gtl::parallel_flat_hash_map`.
+
+`gtl::parallel_flat_hash_map` provides a classical interface mimicking that of `absl::flat_hash_map`,
+and most member functions properly lock the underlying data structure on execution,
+but the iterators _are not thread-safe_ (they are not locked on the pointed to
+element): so, iterator-based functionalities and member functions returning
+an element reference (`operator[]`) are esentially thread-unsafe. Additionally,
+the following thread-safe, function-based operations are provided:
+* `bool if_contains(const K&, F&&)`
+* `bool modify_if(const K&y, F&&)`
+* `bool erase_if(const K&, F&&)`
+* `bool try_emplace_l(K&&, F&&, Args&&...)`
+* `bool lazy_emplace_l(const K&, FExists&&, FEmplace&&)`
+* `void for_each(F&&)` (const) 
+* `void for_each_m(F&&)` (non-const)
+* `void with_submap(size_t, F&&)` (const)
+* `void with_submap_m(size_t, F&&)` (non-const)
+
+`try_emplace_l(k, f, args...)` inserts an element constructed with
+(`k`, `args...`) and returns `true`, or invokes `f(x)` and returns `false`
+if there's a preexistent equivalent element `x`.
+`lazy_emplace_l(key, fExists, fEmplace)` looks for
+an element equivalent to `key`: if it exists, invokes `fExists` on it, otherwise,
+a so-called _constructor object_ is passed to `fEmplace` to allow for
+element creation:
+
+```cpp
+map.lazy_emplace_l(
+  5,
+  [](tbb_map_type::value_type& x){ x.second = 6; },     // update
+  [](tbb_map_type::constructor& ctor){ ctor(5, 13); }); // or create
+```
+
+(Incidentally, the implementation does not check that the element created is
+actually equivalent to `key`, which can lead to a violation of the container
+invariants). `for_each` and `for_each_m` allow for read and write traversal
+of the container, respectively, whereas `with_submap` and `with_submap_m` implement
+_submap_ traversal (`gtl::parallel_flat_hash_map` implementation is based on
+sharding).
+
 ### Comparison table
 
-|  |oneTBB|libcuckoo|`std::concurrent_unordered_map`<br/> proposal|
-|:--|:-:|:-:|:-:|
-|Iterators|unsafe|no|no<br/><sup>(whole container traversal with `visit_all`)</sup>|
-|Assignment|unsafe|unsafe|safe|
-|Rehash|safe|safe|no|
-|`clear`, `swap`|unsafe|safe|safe|
-|`size`, `count`, `empty`|safe|safe|no|
-|`operator[]`|no|no|no|
-|Lookup/modify interface|adapted classical interface plus<br>accessor-based overloads|adapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
-|Parallel iteration|with splittable ranges<br/><sup>(unsafe)</sup>|no explicit support|no explicit support|
-|Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|
+||oneTBB|libcuckoo|P0652R3 proposal|gtl|
+|:--|:-:|:-:|:-:|:-:|
+|Iterators|unsafe|no|no<br/><sup>(safe traversal with `visit_all`)</sup>|unsafe<br/><sup>(safe traversal with `for_all[_m]`)</sup>|
+|Assignment|unsafe|unsafe|safe|unsafe|
+|Rehash|safe|safe|no|safe|
+|`clear`, `swap`|unsafe|safe|safe|safe|
+|`size`, `count`, `empty`|safe|safe|no|safe|
+|`operator[]`|no|no|no|unsafe|
+|Lookup/modify interface|adapted classical interface plus accessor-based overloads|adapted classical interface plus functor-based `find_fn`, `update_fn`, `uprase_fn`, `upsert`|adapted classical interface plus `visit`, `visit_or_emplace`, `update`|unsafe classical interface plus functor-based `if_contains`, `modify_if`, `erase_if`, `try_emplace_l`, `lazy_emplace_l`|
+|Parallel iteration|with splittable ranges (unsafe)|no explicit support|no explicit support|with `with_submap[_m]` (safe)|
+|Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|no|
