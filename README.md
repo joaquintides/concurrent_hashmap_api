@@ -130,6 +130,6 @@ with local iterators.
 |`clear`, `swap`|unsafe|safe|safe|
 |`size`, `count`, `empty`|safe|safe|no|
 |`operator[]`|no|no|no|
-|Lookup/modify interface|adapted classical interface plus<br>accessor-based overloads|sdapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
+|Lookup/modify interface|adapted classical interface plus<br>accessor-based overloads|adapted classical interface plus<br>functor-based `find_fn`, `update_fn`,<br/>`uprase_fn`, `upsert`|adapted classical interface plus<br>`visit`, `visit_or_emplace`,<br/>`update`| 
 |Parallel iteration|with splittable ranges<br/><sup>(unsafe)</sup>|no explicit support|no explicit support|
 |Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|
