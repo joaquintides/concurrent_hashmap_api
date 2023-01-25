@@ -133,7 +133,7 @@ element): so, iterator-based functionalities and member functions returning
 an element reference (`operator[]`) are esentially thread-unsafe. Additionally,
 the following thread-safe, function-based operations are provided:
 * `bool if_contains(const K&, F&&)`
-* `bool modify_if(const K&y, F&&)`
+* `bool modify_if(const K&, F&&)`
 * `bool erase_if(const K&, F&&)`
 * `bool try_emplace_l(K&&, F&&, Args&&...)`
 * `bool lazy_emplace_l(const K&, FExists&&, FEmplace&&)`
@@ -142,6 +142,9 @@ the following thread-safe, function-based operations are provided:
 * `void with_submap(size_t, F&&)` (const)
 * `void with_submap_m(size_t, F&&)` (non-const)
 
+`if_contains(key, f)` and `modify_if(key, f)` provide read and write access, respectively,
+to the element equivalent to `key`. `erase_if(key, f)` erases the element `x`
+equivalent to `key` iff `f(x)` returns true.
 `try_emplace_l(k, f, args...)` inserts an element constructed with
 (`k`, `args...`) and returns `true`, or invokes `f(x)` and returns `false`
 if there's a preexistent equivalent element `x`.
@@ -160,7 +163,7 @@ map.lazy_emplace_l(
 (Incidentally, the implementation does not check that the element created is
 actually equivalent to `key`, which can lead to a violation of the container
 invariants). `for_each` and `for_each_m` allow for read and write traversal
-of the container, respectively, whereas `with_submap` and `with_submap_m` implement
+of the container, respectively, whereas `with_submap` and `with_submap_m` perform
 _submap_ traversal (`gtl::parallel_flat_hash_map` implementation is based on
 sharding).
 
