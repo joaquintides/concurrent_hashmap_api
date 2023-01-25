@@ -189,7 +189,7 @@ member function used is const or not, respectively.
 
 ## A systematic approach to designing our lookup/modify interface
 
-Iterators allow for composition of several operations onto the same element
+Iterators allow for composition of several operations on the same element
 —for instance, find an element and erase it or not based on some check on its
 mapped value. In the absence of iterators, composite operations are not possible
 (elements can't be referenced once a basic map operation has completed), so
