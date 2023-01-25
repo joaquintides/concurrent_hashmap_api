@@ -202,3 +202,4 @@ covered by **ACCESS**, and **INSERT** comprises both insertion and emplacement).
 We can derive an exhaustive diagram of how these operations can be meaningfully
 composed over the same element, which naturally yields our extended map interface:
 
+![diagram](lookup_modify.png)
