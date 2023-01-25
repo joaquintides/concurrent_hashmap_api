@@ -180,3 +180,25 @@ sharding).
 |Lookup/modify interface|adapted classical interface plus accessor-based overloads|adapted classical interface plus functor-based `find_fn`, `update_fn`, `uprase_fn`, `upsert`|adapted classical interface plus `visit`, `visit_or_emplace`, `update`|unsafe classical interface plus functor-based `if_contains`, `modify_if`, `erase_if`, `try_emplace_l`, `lazy_emplace_l`|
 |Parallel iteration|with splittable ranges (unsafe)|no explicit support|no explicit support|with `with_submap[_m]` (safe)|
 |Thread-unsafe view|no|yes<br/><sup>(locks parent container)</sup>|yes<br/><sup>(parent locking specified by user)</sup>|no|
+
+## Design guidelines
+
+* Don't use iterators or accessors [ELABORATE]
+* Access to elements is in read or write mode based on whether the
+member function used is const or not, respectively. 
+
+## A systematic approach to designing our lookup/modify interface
+
+Iterators allow for composition of several operations onto the same element
+—for instance, find an element and erase it or not based on some check on its
+mapped value. In the absence of iterators, composite operations are not possible
+(elements can't be referenced once a basic map operation has completed), so
+we need to extend the map interface to cover most (hopefully all) composite
+operations natively. The following is an attempt at designing such interface.
+
+There are only four basic operations or "primitives" one can perform on a value/element:
+**FIND**, **ACCESS**, **INSERT** and **ERASE** (read and write access are generically
+covered by **ACCESS**, and **INSERT** comprises both insertion and emplacement).
+We can derive an exhaustive diagram of how these operations can be meaningfully
+composed over the same element, which naturally yields our extended map interface:
+
