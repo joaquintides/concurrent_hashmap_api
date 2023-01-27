@@ -183,9 +183,29 @@ sharding).
 
 ## Design guidelines
 
-* Don't use iterators or accessors [ELABORATE]
+* The entire map interface must be thread-safe, including assignment and destruction.
+* Don't use iterators or accessors, either blocking or not: when not-blocking, they're
+unsafe, and when they are they increase contention when not properly used,
+and can very easily lead to deadlocks:
+```cpp
+// Thread 1
+map_type::iterator it1=map.find(x1), it2=map.find(x2);
+
+// Thread 2
+map_type::iterator it2=map.find(x2), it1=map.find(x1);
+```
+* Don't provide `operator[]` (thread-unsafe).
 * Access to elements is in read or write mode based on whether the
 member function used is const or not, respectively. 
+
+## Open questions
+
+* In addition to `concurrent_hash_map`, do we want any of `concurrent_hash_set`
+and `concurrent_hash_node_[map|set]`?
+* A variation of `concurrent_hash_node_map` can internally store
+`std::shared_ptr<value_type>`s and provide accesor-like, non-blocking, thread-safe
+access to the elements (without the guarantee that elements remain in the map during
+the accessor lifetime). Is this a valuable data structure?
 
 ## A systematic approach to designing our lookup/modify interface
 
