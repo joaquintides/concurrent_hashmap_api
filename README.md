@@ -184,8 +184,18 @@ sharding).
 ## Design guidelines
 
 * The entire map interface must be thread-safe, including assignment and destruction.
-* Don't use iterators or accessors, either blocking or not: when not-blocking, they're
-unsafe, and when they are they increase contention when not properly used,
+In the case of assignment, the implementation must be protected against potential
+deadlock scenarios such as the following:
+```cpp
+// Thread 1
+map1=map2;
+
+// Thread 2
+map2=map1;
+```
+
+* Don't provide iterators or accessors, either blocking or not: if not-blocking, they're
+unsafe, and if blocking they increase contention when not properly used,
 and can very easily lead to deadlocks:
 ```cpp
 // Thread 1
@@ -194,9 +204,16 @@ map_type::iterator it1=map.find(x1), it2=map.find(x2);
 // Thread 2
 map_type::iterator it2=map.find(x2), it1=map.find(x1);
 ```
-* Don't provide `operator[]` (thread-unsafe).
-* Access to elements is in read or write mode based on whether the
-member function used is const or not, respectively. 
+* Don't provide `operator[]` (thread-unsafe). This is syntactic sugar and can be
+replaced by safe alternatives.
+* Provide `size`, `empty`, `count`. Even though P0652R3 deems these member functions
+useless and dangerous, they don't behave differently to any other
+lookup/modify method in that the status of the container may change as
+soon as the operation completes. Moreover, this information is useful
+and reliable in the second stage of common population+access scenarios.
+* Access to elements shall be in read or write mode based on whether the
+member function used is const or not, respectively.
+* Provides some means of doing parallel iteration.
 
 ## Open questions
 
@@ -206,6 +223,10 @@ and `concurrent_hash_node_[map|set]`?
 `std::shared_ptr<value_type>`s and provide accesor-like, non-blocking, thread-safe
 access to the elements (without the guarantee that elements remain in the map during
 the accessor lifetime). Is this a valuable data structure?
+* Do we want to provide a (blocking or not) thread-unsafe view over the map, in the
+same way as libcukcoo and P0652R3 do? There's the additional possibility of
+providing O(1) move assignment from `concurrent_hash_map` to `unordered_flat_map`
+(move assignment in the opposite direction would be O(n) but fairly cheap).
 
 ## A systematic approach to designing our lookup/modify interface
 
@@ -223,3 +244,7 @@ We can derive an exhaustive diagram of how these operations can be meaningfully
 composed over the same element, which naturally yields our extended map interface:
 
 ![diagram](lookup_modify.png)
+
+## On parallel iteration
+
+
