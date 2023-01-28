@@ -246,6 +246,20 @@ composed over the same element, which naturally yields our extended map interfac
 
 ![diagram](lookup_modify.png)
 
+Some observations for discussion:
+
+* `find(k)` is entirely equivalent to `contains(k)`, so we may consider removing it.
+* `find(k, f)` could also be named `visit` à la P0652R3.
+* Similarly, all `*_modify` operations could be named `*_visit`. `access_and_erase`
+can be named `moodify_and_erase` or `visit_and_erase`.
+* `*_modify(..., f, ...)` operations can be trivially emulated with
+`*_erase_if(..., [&](auto& x){ f(x); return false; }, ...)`, but it seems reasonable
+to keep `*_modify` as their intent is quite different.
+* `*_or_erase[_if]` operations serve a rather exotic scenario (erase an
+element if it caused a collision on insertion) and could be emulated by an insertion
+operation followed by `erase_if` on failure. We should decide whether we keep them
+for completeness or if we drop them. 
+
 ## On parallel iteration
 
-
+TBW [TBB vs. std, iterators not being forward, blocking vs. non-blocking]
