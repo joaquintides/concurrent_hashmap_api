@@ -257,8 +257,9 @@ can be named `moodify_and_erase` or `visit_and_erase`.
 to keep `*_modify` as their intent is quite different.
 * `*_or_erase[_if]` operations serve a rather exotic scenario (erase an
 element if it caused a collision on insertion) and could be emulated by an insertion
-operation followed by `erase_if` on failure. We should decide whether we keep them
-for completeness or if we drop them. 
+operation followed by `erase_if` on failure, although less efficiently
+and in a non-atomic manner (which is probably unobservable anyway). We should decide
+whether we keep them for completeness or if we drop them. 
 
 ## On parallel iteration
 
