@@ -171,6 +171,7 @@ sharding).
 
 ||oneTBB|libcuckoo|P0652R3 proposal|gtl|
 |:--|:-:|:-:|:-:|:-:|
+|Containers provided|map|map|map|map, set and node-based variations|
 |Iterators|unsafe|no|no<br/><sup>(safe traversal with `visit_all`)</sup>|unsafe<br/><sup>(safe traversal with `for_all[_m]`)</sup>|
 |Assignment|unsafe|unsafe|safe|unsafe|
 |Rehash|safe|safe|no|safe|
