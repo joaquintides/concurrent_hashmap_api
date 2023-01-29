@@ -250,10 +250,10 @@ Some observations for discussion:
 
 * `find(k)` is entirely equivalent to `contains(k)`, so we may consider removing it.
 * `find(k, f)` could also be named `visit` à la P0652R3.
-* Similarly, all `*_modify` operations could be named `*_visit`. `access_and_erase`
-can be named `moodify_and_erase` or `visit_and_erase`.
-* `*_modify(..., f, ...)` operations can be trivially emulated with
-`*_erase_if(..., [&](auto& x){ f(x); return false; }, ...)`, but it seems reasonable
+* Similarly, all `*_or_modify` operations could be named `*_or_visit`. `access_and_erase`
+can be named `modify_and_erase` or `visit_and_erase`.
+* `*_or_modify(..., f, ...)` operations can be trivially emulated with
+`*_or_erase_if(..., [&](auto& x){ f(x); return false; }, ...)`, but it seems reasonable
 to keep `*_modify` as their intent is quite different.
 * `*_or_erase[_if]` operations serve a rather exotic scenario (erase an
 element if it caused a collision on insertion) and could be emulated by an insertion
