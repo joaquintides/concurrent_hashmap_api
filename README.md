@@ -254,7 +254,7 @@ Some observations for discussion:
 can be named `modify_and_erase` or `visit_and_erase`.
 * `*_or_modify(..., f, ...)` operations can be trivially emulated with
 `*_or_erase_if(..., [&](auto& x){ f(x); return false; }, ...)`, but it seems reasonable
-to keep `*_modify` as their intent is quite different.
+to keep `*_or_modify` as their intent is quite different.
 * `*_or_erase[_if]` operations serve a rather exotic scenario (erase an
 element if it caused a collision on insertion) and could be emulated by an insertion
 operation followed by `erase_if` on failure, although less efficiently
