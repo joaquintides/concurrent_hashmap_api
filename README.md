@@ -263,4 +263,40 @@ whether we keep them for completeness or if we drop them.
 
 ## On parallel iteration
 
-TBW [TBB vs. std, iterators not being forward, blocking vs. non-blocking]
+We can provide parallel iteration in a number of ways:
+* _Externally_ by exposing a traversal facility that can be taken advantage of by
+parallelization frameworks. The two obvious options are:
+  * oneTBB through the notion of [container ranges](https://spec.oneapi.io/versions/latest/elements/oneTBB/source/named_requirements/containers/container_range.html).
+  * Standard parallel algorithms through regular forward iterators.
+* _Internally_, that is, via an specializad overload of, say, `visit_all` whose
+implementation does the parallelization work.
+
+As for external solutions, oneTBB is far from being a de facto standard in C++,
+which leaves us with standard parallel algorithms. The main problem here is that,
+if provided, iterators would not be easily made random-access, and iterator
+increment is particularly slow for our data structure.
+
+Internal parallelization, on the other hand, can be implemented very efficiently
+by traversing element _groups_ rather than individual slots:
+
+```cpp
+// exposition only
+template<typename F>
+void visit_all(ExecutionPolicy&& policy, F f)
+{
+  auto lck=shared_access();
+  std::for_each(
+    std::forward<ExecutionPolicy>(policy),
+    groups_begin(), groups_end(), // random-access iterators
+    [&,this](group& g){
+      auto lckg=exclusive_access(g);
+      auto mask=g.match_occupied();
+      while(mask){
+        auto n=unchecked_countr_zero(mask);
+        f(element(g, n));
+        mask&=mask-1;
+      }
+    }
+  }
+}
+```
