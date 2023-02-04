@@ -364,11 +364,16 @@ public:
   concurrent_unordered_flat_map(std::initializer_list<value_type> il, size_type n, const hasher& hf,
                                 const allocator_type& a);
   ~concurrent_unordered_flat_map();
+  
   concurrent_unordered_flat_map& operator=(const concurrent_unordered_flat_map& other);
   concurrent_unordered_flat_map& operator=(concurrent_unordered_flat_map&& other)
     noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
              std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value);
+  // Concurrency: Blocking on *this and other. 
+             
   concurrent_unordered_flat_map& operator=(std::initializer_list<value_type>);
+  // Concurrency: Blocking. 
+
   allocator_type get_allocator() const noexcept;    
   
   // visitation
@@ -378,12 +383,22 @@ public:
   template<typename F> std::size_t visit(key_type&& k, F f);
   template<typename K,typename F> std::size_t visit(K&& k, F f) const;
   template<typename K,typename F> std::size_t visit(K&& k, F f);
+  // Effects: If an element equivalent to k is found, passes a (const) reference to it to f.
+  // Returns: number of elements visited (0 or 1).
   
   template<typename F> std::size_t visit_all(F f) const;
   template<typename F> std::size_t visit_all(F f);
+  // Effects: Successively passes (const) references to all the elements in the
+  // container to f.
+  // Returns: Number of elements visited.
+  // Concurrency: Non-blocking.
   
   template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f) const;
   template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f);
+  // Effects: Passes (const) references to all the elements in the container to f, with no
+  // guaranteed order and using the specified parallel execution policy.
+  // Exceptions: as parallel std::for_each.
+  // Concurrency: Non-blocking.
   
   // capacity
   [[nodiscard]] bool empty() const noexcept;
@@ -406,6 +421,9 @@ public:
   template<typename F, typename... Args> bool try_emplace_or_visit(const key_type& k, F f, Args&&... args);
   template<typename F, typename... Args> bool try_emplace_or_visit(key_type&& k, F f, Args&&... args);
   template<class K, typename F, typename... Args> bool try_emplace_or_visit(K&& k, F f, Args&&... args);
+  // Effects: Tries to emplace an element piecewise-constructed from k and args... If an equivalent
+  // element already exists, passes a reference to it to f.
+  // Returns: true iff emplacement took place.
 
   template<typename M> bool insert_or_assign(const key_type& k, M&& obj);
   template<typename M> bool insert_or_assign(key_type&& k, M&& obj);
@@ -416,9 +434,16 @@ public:
   template<typename F> bool insert_or_visit(const init_type& obj, F f);
   template<typename F> bool insert_or_visit(value_type&& obj, F f);
   template<typename F> bool insert_or_visit(init_type&& obj, F f);
+  // Effects: Tries to emplace/insert an element constructed from args.../obj. If an equivalent
+  // element already exists, passes a reference to it to f.
+  // Returns: true iff emplacement/insertion took place.
+  
   template<typename InputIterator,typename F>
     void insert_or_visit(InputIterator first, InputIterator last, F f);
-  template<typename F> void insert_or_visit(std::initializer_list<value_type> il, F f);  
+  // Effects: while(first != last) this->insert_or_visit(*first++, f);
+
+  template<typename F> void insert_or_visit(std::initializer_list<value_type> il, F f);
+  // Effects: this->insert_or_visit(il.begin(), il.end(), f);
   
   size_type erase(const key_type& k);
   template<typename K> size_type erase(K&& k);
@@ -426,23 +451,37 @@ public:
   template<typename F> size_type erase_if(const key_type& k, F f);
   template<typename F> size_type erase_if(key_type&& k, F f);
   template<typename K, typename F> size_type erase_if(K&& k, F f);
+  // Effects: If an element equivalent to k is found, passes a reference to it to f
+  // and erases it if f returns true.
+  // Returns: Number of elements erased (0 or 1).
+  
   template<typename F> size_type erase_if(F f);
+  // Effects: Successively passes references to all the elements in the container to f,
+  // and erases those for which f returns true. 
+  // Returns: Number of elements erased.
+  // Concurrency: Non-blocking.
+  
   template<typename ExecutionPolicy, typename F> void erase_if(ExecutionPolicy&& policy, F f)
     requires std::is_execution_policy_v<std::remove_cvref_t<ExecutionPolicy>>;
-  
-  template<typename F> size_type visit_and_erase(const key_type& k, F f);
-  template<typename F> size_type visit_and_erase(key_type&& k, F f);
-  template<typename K, typename F> size_type visit_and_erase(K&& k, F f);
+  // Effects: Passes references to all the elements in the container to f, with no
+  // guaranteed order and using the specified parallel execution policy, and deletes
+  // those for which f returns true.
+  // Exceptions: As parallel std::for_each.
+  // Concurrency: Non-blocking.
   
   void swap(concurrent_unordered_flat_map& other)
     noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
-             std::allocator_traits<Allocator>::propagate_on_container_swap::value);  
+             std::allocator_traits<Allocator>::propagate_on_container_swap::value);
+  // Concurrency: Blocking on *this and x.
+             
   void clear() noexcept;
+  // Concurrency: Blocking.
 
   template<typename H2, typename P2>
     void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>& x);
   template<typename H2, typename P2>
     void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>&& x);
+  // Concurrency: Non-blocking.
       
   // observers
   hasher hash_function() const;
@@ -459,7 +498,9 @@ public:
   float max_load_factor() const noexcept;
   void max_load_factor(float z);
   size_type max_load() const noexcept;
+  
   void rehash(size_type n);
   void reserve(size_type n);
+  // Concurrency: Blocking.
 };
 ```
