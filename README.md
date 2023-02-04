@@ -218,9 +218,10 @@ member function used is const or not, respectively.
 
 ## Open questions
 
-* In addition to `concurrent_hash_map`, do we want any of `concurrent_hash_set`
-and `concurrent_hash_node_[map|set]`?
-* A variation of `concurrent_hash_node_map` can internally store
+* Do we provide `concurrent_unordered_flat_map::operator==`?
+* In addition to `concurrent_unordered_flat_map`, do we want any of
+`concurrent_unordered_flat_set` and `concurrent_unordered_node_[map|set]`?
+* A variation of `concurrent_unordered_node_map` can internally store
 `std::shared_ptr<value_type>`s and provide accesor-like, non-blocking, thread-safe
 access to the elements (without the guarantee that elements remain in the map during
 the accessor lifetime). Is this a valuable data structure?
@@ -281,7 +282,7 @@ by traversing element _groups_ rather than individual slots:
 
 ```cpp
 // exposition only
-template<typename F>
+template<typename ExecutionPolicy, typename F>
 void visit_all(ExecutionPolicy&& policy, F f)
 {
   auto lck=shared_access();
@@ -299,4 +300,166 @@ void visit_all(ExecutionPolicy&& policy, F f)
     }
   }
 }
+```
+
+## Proposed synopsis
+
+```cpp
+template<
+  typename Key, typename T,
+  typename Hash=boost::hash<Key>,
+  typename Pred=std::equal_to<Key>,
+  typename Allocator=std::allocator<std::pair<const Key,T>>
+>
+class concurrent_unordered_flat_map
+{
+public:
+  // types
+  using key_type       = Key;
+  using mapped_type    = T;
+  using value_type     = std::pair<const Key, T>;
+  using init_type      = std::pair<
+                           typename std::remove_const<Key>::type,
+                           typename std::remove_const<T>::type
+                         >;
+  using hasher         = Hash;
+  using key_equal      = Pred;
+  using allocator_type = Allocator;
+  using size_type      = std::size_t;
+  
+  // construct/copy/destroy
+  concurrent_unordered_flat_map();
+  explicit concurrent_unordered_flat_map(size_type n,
+                                         const hasher& hf = hasher(),
+                                         const key_equal& eql = key_equal(),
+                                         const allocator_type& a = allocator_type());
+  template<typenamme InputIterator>
+    concurrent_unordered_flat_map(InputIterator f, InputIterator l,
+                                  size_type n = implementation-defined,
+                                  const hasher& hf = hasher(),
+                                  const key_equal& eql = key_equal(),
+                                  const allocator_type& a = allocator_type());
+  concurrent_unordered_flat_map(const concurrent_unordered_flat_map& x);
+  concurrent_unordered_flat_map(concurrent_unordered_flat_map&& x);
+  template<typename InputIterator>
+    concurrent_unordered_flat_map(InputIterator f, InputIterator l, const allocator_type& a);
+  explicit concurrent_unordered_flat_map(const Allocator& a);
+  concurrent_unordered_flat_map(const concurrent_unordered_flat_map& x, const Allocator& a);
+  concurrent_unordered_flat_map(concurrent_unordered_flat_map&& x, const Allocator& a);
+  concurrent_unordered_flat_map(std::initializer_list<value_type> il,
+                                size_type n = implementation-defined
+                                const hasher& hf = hasher(),
+                                const key_equal& eql = key_equal(),
+                                const allocator_type& a = allocator_type());
+  concurrent_unordered_flat_map(size_type n, const allocator_type& a);
+  concurrent_unordered_flat_map(size_type n, const hasher& hf, const allocator_type& a);
+  template<typename InputIterator>
+    concurrent_unordered_flat_map(InputIterator f, InputIterator l, size_type n, const allocator_type& a);
+  template<typename InputIterator>
+    concurrent_unordered_flat_map(InputIterator f, InputIterator l, size_type n, const hasher& hf,
+                                  const allocator_type& a);
+  concurrent_unordered_flat_map(std::initializer_list<value_type> il, const allocator_type& a);
+  concurrent_unordered_flat_map(std::initializer_list<value_type> il, size_type n,
+                                const allocator_type& a);
+  concurrent_unordered_flat_map(std::initializer_list<value_type> il, size_type n, const hasher& hf,
+                                const allocator_type& a);
+  ~concurrent_unordered_flat_map();
+  concurrent_unordered_flat_map& operator=(const concurrent_unordered_flat_map& other);
+  concurrent_unordered_flat_map& operator=(concurrent_unordered_flat_map&& other)
+    noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
+             std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value);
+  concurrent_unordered_flat_map& operator=(std::initializer_list<value_type>);
+  allocator_type get_allocator() const noexcept;    
+  
+  // visitation
+  template<typename F> std::size_t visit(const key_type& k, F f) const;
+  template<typename F> std::size_t visit(const key_type& k, F f);
+  template<typename F> std::size_t visit(key_type&& k, F f) const;
+  template<typename F> std::size_t visit(key_type&& k, F f);
+  template<typename K,typename F> std::size_t visit(K&& k, F f) const;
+  template<typename K,typename F> std::size_t visit(K&& k, F f);
+  
+  template<typename F> std::size_t visit_all(F f) const;
+  template<typename F> std::size_t visit_all(F f);
+  
+  template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f) const;
+  template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f);
+  
+  // capacity
+  [[nodiscard]] bool empty() const noexcept;
+  size_type size() const noexcept;
+  size_type max_size() const noexcept;
+
+  // modifiers
+  template<typename... Args> bool emplace(Args&&... args);
+  bool insert(const value_type& obj);
+  bool insert(const init_type& obj);
+  bool insert(value_type&& obj);
+  bool insert(init_type&& obj);
+  template<typename InputIterator> void insert(InputIterator first, InputIterator last);
+  void insert(std::initializer_list<value_type> il);  
+
+  template<typename... Args> bool try_emplace(const key_type& k, Args&&... args);
+  template<typename... Args> bool try_emplace(key_type&& k, Args&&... args);
+  template<class K, typename... Args> bool try_emplace(K&& k, Args&&... args);
+  
+  template<typename F, typename... Args> bool try_emplace_or_visit(const key_type& k, F f, Args&&... args);
+  template<typename F, typename... Args> bool try_emplace_or_visit(key_type&& k, F f, Args&&... args);
+  template<class K, typename F, typename... Args> bool try_emplace_or_visit(K&& k, F f, Args&&... args);
+
+  template<typename M> bool insert_or_assign(const key_type& k, M&& obj);
+  template<typename M> bool insert_or_assign(key_type&& k, M&& obj);
+  template<typename K, typename M> bool insert_or_assign(K&& k, M&& obj);
+  
+  template<typename F,typename... Args> bool emplace_or_visit(F f, Args&&... args);
+  template<typename F> bool insert_or_visit(const value_type& obj, F f);
+  template<typename F> bool insert_or_visit(const init_type& obj, F f);
+  template<typename F> bool insert_or_visit(value_type&& obj, F f);
+  template<typename F> bool insert_or_visit(init_type&& obj, F f);
+  template<typename InputIterator,typename F>
+    void insert_or_visit(InputIterator first, InputIterator last, F f);
+  template<typename F> void insert_or_visit(std::initializer_list<value_type> il, F f);  
+  
+  size_type erase(const key_type& k);
+  template<typename K> size_type erase(K&& k);
+  
+  template<typename F> size_type erase_if(const key_type& k, F f);
+  template<typename F> size_type erase_if(key_type&& k, F f);
+  template<typename K, typename F> size_type erase_if(K&& k, F f);
+  template<typename F> size_type erase_if(F f);
+  template<typename ExecutionPolicy, typename F> void erase_if(ExecutionPolicy&& policy, F f)
+    requires std::is_execution_policy_v<std::remove_cvref_t<ExecutionPolicy>>;
+  
+  template<typename F> size_type visit_and_erase(const key_type& k, F f);
+  template<typename F> size_type visit_and_erase(key_type&& k, F f);
+  template<typename K, typename F> size_type visit_and_erase(K&& k, F f);
+  
+  void swap(concurrent_unordered_flat_map& other)
+    noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
+             std::allocator_traits<Allocator>::propagate_on_container_swap::value);  
+  void clear() noexcept;
+
+  template<typename H2, typename P2>
+    void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>& x);
+  template<typename H2, typename P2>
+    void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>&& x);
+      
+  // observers
+  hasher hash_function() const;
+  key_equal key_eq() const;
+      
+  // map operations
+  size_type count(const key_type& k) const;
+  template<typename K> size_type count(const K& k) const;
+  bool contains(const key_type& k) const;
+  template<typename K> bool contains(const K& k) const;  
+  
+  // hash policy
+  float load_factor() const noexcept;
+  float max_load_factor() const noexcept;
+  void max_load_factor(float z);
+  size_type max_load() const noexcept;
+  void rehash(size_type n);
+  void reserve(size_type n);
+};
 ```
