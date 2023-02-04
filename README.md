@@ -397,7 +397,7 @@ public:
   template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f);
   // Effects: Passes (const) references to all the elements in the container to f, with no
   // guaranteed order and using the specified parallel execution policy.
-  // Exceptions: as parallel std::for_each.
+  // Exceptions: As parallel std::for_each.
   // Concurrency: Non-blocking.
   
   // capacity
