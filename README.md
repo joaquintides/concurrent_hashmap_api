@@ -384,7 +384,7 @@ public:
   template<typename K,typename F> std::size_t visit(K&& k, F f) const;
   template<typename K,typename F> std::size_t visit(K&& k, F f);
   // Effects: If an element equivalent to k is found, passes a (const) reference to it to f.
-  // Returns: number of elements visited (0 or 1).
+  // Returns: Number of elements visited (0 or 1).
   
   template<typename F> std::size_t visit_all(F f) const;
   template<typename F> std::size_t visit_all(F f);
