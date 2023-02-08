@@ -184,7 +184,7 @@ sharding).
 
 ## Design guidelines
 
-* The entire map interface must be thread-safe, including assignment and destruction.
+* The entire map interface must be thread-safe, including assignment.
 In the case of assignment, the implementation must be protected against potential
 deadlock scenarios such as the following:
 ```cpp
