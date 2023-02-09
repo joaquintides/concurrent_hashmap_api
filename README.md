@@ -429,7 +429,7 @@ public:
   template<typename M> bool insert_or_assign(key_type&& k, M&& obj);
   template<typename K, typename M> bool insert_or_assign(K&& k, M&& obj);
   
-  template<typename F,typename... Args> bool emplace_or_visit(F f, Args&&... args);
+  template<typename F, typename... Args> bool emplace_or_visit(F f, Args&&... args);
   template<typename F> bool insert_or_visit(const value_type& obj, F f);
   template<typename F> bool insert_or_visit(const init_type& obj, F f);
   template<typename F> bool insert_or_visit(value_type&& obj, F f);
