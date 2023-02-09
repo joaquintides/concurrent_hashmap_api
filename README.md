@@ -309,7 +309,7 @@ template<
   typename Key, typename T,
   typename Hash=boost::hash<Key>,
   typename Pred=std::equal_to<Key>,
-  typename Allocator=std::allocator<std::pair<const Key,T>>
+  typename Allocator=std::allocator<std::pair<const Key, T>>
 >
 class concurrent_unordered_flat_map
 {
