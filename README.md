@@ -311,7 +311,7 @@ template<
   typename Pred=std::equal_to<Key>,
   typename Allocator=std::allocator<std::pair<const Key, T>>
 >
-class concurrent_unordered_flat_map
+class concurrent_flat_map
 {
 public:
   // types
@@ -328,73 +328,78 @@ public:
   using size_type      = std::size_t;
   
   // construct/copy/destroy
-  concurrent_unordered_flat_map();
-  explicit concurrent_unordered_flat_map(size_type n,
-                                         const hasher& hf = hasher(),
-                                         const key_equal& eql = key_equal(),
-                                         const allocator_type& a = allocator_type());
+  concurrent_flat_map();
+  explicit concurrent_flat_map(size_type n,
+                               const hasher& hf = hasher(),
+                               const key_equal& eql = key_equal(),
+                               const allocator_type& a = allocator_type());
   template<typenamme InputIterator>
-    concurrent_unordered_flat_map(InputIterator f, InputIterator l,
-                                  size_type n = implementation-defined,
-                                  const hasher& hf = hasher(),
-                                  const key_equal& eql = key_equal(),
-                                  const allocator_type& a = allocator_type());
-  concurrent_unordered_flat_map(const concurrent_unordered_flat_map& x);
-  concurrent_unordered_flat_map(concurrent_unordered_flat_map&& x);
+    concurrent_flat_map(InputIterator f, InputIterator l,
+                        size_type n = implementation-defined,
+                        const hasher& hf = hasher(),
+                        const key_equal& eql = key_equal(),
+                        const allocator_type& a = allocator_type());
+  concurrent_flat_map(const concurrent_flat_map& x);
+  concurrent_flat_map(concurrent_flat_map&& x);
   template<typename InputIterator>
-    concurrent_unordered_flat_map(InputIterator f, InputIterator l, const allocator_type& a);
-  explicit concurrent_unordered_flat_map(const Allocator& a);
-  concurrent_unordered_flat_map(const concurrent_unordered_flat_map& x, const Allocator& a);
-  concurrent_unordered_flat_map(concurrent_unordered_flat_map&& x, const Allocator& a);
-  concurrent_unordered_flat_map(std::initializer_list<value_type> il,
-                                size_type n = implementation-defined
-                                const hasher& hf = hasher(),
-                                const key_equal& eql = key_equal(),
-                                const allocator_type& a = allocator_type());
-  concurrent_unordered_flat_map(size_type n, const allocator_type& a);
-  concurrent_unordered_flat_map(size_type n, const hasher& hf, const allocator_type& a);
+    concurrent_flat_map(InputIterator f, InputIterator l, const allocator_type& a);
+  explicit concurrent_flat_map(const Allocator& a);
+  concurrent_flat_map(const concurrent_flat_map& x, const Allocator& a);
+  concurrent_flat_map(concurrent_flat_map&& x, const Allocator& a);
+  concurrent_flat_map(std::initializer_list<value_type> il,
+                      size_type n = implementation-defined
+                      const hasher& hf = hasher(),
+                      const key_equal& eql = key_equal(),
+                      const allocator_type& a = allocator_type());
+  concurrent_flat_map(size_type n, const allocator_type& a);
+  concurrent_flat_map(size_type n, const hasher& hf, const allocator_type& a);
   template<typename InputIterator>
-    concurrent_unordered_flat_map(InputIterator f, InputIterator l, size_type n, const allocator_type& a);
+    concurrent_flat_map(InputIterator f, InputIterator l, size_type n, const allocator_type& a);
   template<typename InputIterator>
-    concurrent_unordered_flat_map(InputIterator f, InputIterator l, size_type n, const hasher& hf,
-                                  const allocator_type& a);
-  concurrent_unordered_flat_map(std::initializer_list<value_type> il, const allocator_type& a);
-  concurrent_unordered_flat_map(std::initializer_list<value_type> il, size_type n,
-                                const allocator_type& a);
-  concurrent_unordered_flat_map(std::initializer_list<value_type> il, size_type n, const hasher& hf,
-                                const allocator_type& a);
-  ~concurrent_unordered_flat_map();
+    concurrent_flat_map(InputIterator f, InputIterator l, size_type n, const hasher& hf,
+                        const allocator_type& a);
+  concurrent_flat_map(std::initializer_list<value_type> il, const allocator_type& a);
+  concurrent_flat_map(std::initializer_list<value_type> il, size_type n,
+                      const allocator_type& a);
+  concurrent_flat_map(std::initializer_list<value_type> il, size_type n, const hasher& hf,
+                      const allocator_type& a);
+  ~concurrent_flat_map();
   
-  concurrent_unordered_flat_map& operator=(const concurrent_unordered_flat_map& other);
-  concurrent_unordered_flat_map& operator=(concurrent_unordered_flat_map&& other)
+  concurrent_flat_map& operator=(const concurrent_flat_map& other);
+  concurrent_flat_map& operator=(concurrent_flat_map&& other)
     noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
              std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value);
   // Concurrency: Blocking on *this and other. 
              
-  concurrent_unordered_flat_map& operator=(std::initializer_list<value_type>);
+  concurrent_flat_map& operator=(std::initializer_list<value_type>);
   // Concurrency: Blocking. 
 
   allocator_type get_allocator() const noexcept;    
   
   // visitation
-  template<typename F> std::size_t visit(const key_type& k, F f) const;
   template<typename F> std::size_t visit(const key_type& k, F f);
-  template<typename F> std::size_t visit(key_type&& k, F f) const;
+  template<typename F> std::size_t visit(const key_type& k, F f) const;
+  template<typename F> std::size_t cvisit(const key_type& k, F f) const;
   template<typename F> std::size_t visit(key_type&& k, F f);
-  template<typename K,typename F> std::size_t visit(K&& k, F f) const;
+  template<typename F> std::size_t visit(key_type&& k, F f) const;
+  template<typename F> std::size_t cvisit(key_type&& k, F f) const;
   template<typename K,typename F> std::size_t visit(K&& k, F f);
+  template<typename K,typename F> std::size_t visit(K&& k, F f) const;
+  template<typename K,typename F> std::size_t cvisit(K&& k, F f) const;
   // Effects: If an element equivalent to k is found, passes a (const) reference to it to f.
   // Returns: Number of elements visited (0 or 1).
   
-  template<typename F> std::size_t visit_all(F f) const;
   template<typename F> std::size_t visit_all(F f);
+  template<typename F> std::size_t visit_all(F f) const;
+  template<typename F> std::size_t cvisit_all(F f) const;
   // Effects: Successively passes (const) references to all the elements in the
   // container to f.
   // Returns: Number of elements visited.
   // Concurrency: Non-blocking.
   
-  template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f) const;
   template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f);
+  template<typename ExecutionPolicy, typename F> void visit_all(ExecutionPolicy&& policy, F f) const;
+  template<typename ExecutionPolicy, typename F> void cvisit_all(ExecutionPolicy&& policy, F f) const;
   // Effects: Passes (const) references to all the elements in the container to f, with no
   // guaranteed order and using the specified parallel execution policy.
   // Exceptions: As parallel std::for_each.
@@ -419,8 +424,11 @@ public:
   template<class K, typename... Args> bool try_emplace(K&& k, Args&&... args);
   
   template<typename F, typename... Args> bool try_emplace_or_visit(const key_type& k, F f, Args&&... args);
+  template<typename F, typename... Args> bool try_emplace_or_cvisit(const key_type& k, F f, Args&&... args);
   template<typename F, typename... Args> bool try_emplace_or_visit(key_type&& k, F f, Args&&... args);
+  template<typename F, typename... Args> bool try_emplace_or_cvisit(key_type&& k, F f, Args&&... args);
   template<class K, typename F, typename... Args> bool try_emplace_or_visit(K&& k, F f, Args&&... args);
+  template<class K, typename F, typename... Args> bool try_emplace_or_cvisit(K&& k, F f, Args&&... args);
   // Effects: Tries to emplace an element piecewise-constructed from k and args... If an equivalent
   // element already exists, passes a reference to it to f.
   // Returns: true iff emplacement took place.
@@ -430,20 +438,28 @@ public:
   template<typename K, typename M> bool insert_or_assign(K&& k, M&& obj);
   
   template<typename F, typename... Args> bool emplace_or_visit(F f, Args&&... args);
+  template<typename F, typename... Args> bool emplace_or_cvisit(F f, Args&&... args);
   template<typename F> bool insert_or_visit(const value_type& obj, F f);
+  template<typename F> bool insert_or_cvisit(const value_type& obj, F f);
   template<typename F> bool insert_or_visit(const init_type& obj, F f);
+  template<typename F> bool insert_or_cvisit(const init_type& obj, F f);
   template<typename F> bool insert_or_visit(value_type&& obj, F f);
+  template<typename F> bool insert_or_cvisit(value_type&& obj, F f);
   template<typename F> bool insert_or_visit(init_type&& obj, F f);
+  template<typename F> bool insert_or_cvisit(init_type&& obj, F f);
   // Effects: Tries to emplace/insert an element constructed from args.../obj. If an equivalent
   // element already exists, passes a reference to it to f.
   // Returns: true iff emplacement/insertion took place.
   
   template<typename InputIterator,typename F>
     void insert_or_visit(InputIterator first, InputIterator last, F f);
-  // Effects: while(first != last) this->insert_or_visit(*first++, f);
+  template<typename InputIterator,typename F>
+    void insert_or_cvisit(InputIterator first, InputIterator last, F f);
+  // Effects: while(first != last) this->insert_or_[c]visit(*first++, f);
 
   template<typename F> void insert_or_visit(std::initializer_list<value_type> il, F f);
-  // Effects: this->insert_or_visit(il.begin(), il.end(), f);
+  template<typename F> void insert_or_cvisit(std::initializer_list<value_type> il, F f);
+  // Effects: this->insert_or_[c]visit(il.begin(), il.end(), f);
   
   size_type erase(const key_type& k);
   template<typename K> size_type erase(K&& k);
@@ -469,7 +485,7 @@ public:
   // Exceptions: As parallel std::for_each.
   // Concurrency: Non-blocking.
   
-  void swap(concurrent_unordered_flat_map& other)
+  void swap(concurrent_flat_map& other)
     noexcept(std::allocator_traits<Allocator>::is_always_equal::value ||
              std::allocator_traits<Allocator>::propagate_on_container_swap::value);
   // Concurrency: Blocking on *this and x.
@@ -478,9 +494,9 @@ public:
   // Concurrency: Blocking.
 
   template<typename H2, typename P2>
-    void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>& x);
+    void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>& x);
   template<typename H2, typename P2>
-    void merge(concurrent_unordered_flat_map<Key, T, H2, P2, Allocator>&& x);
+    void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>&& x);
   // Concurrency: Non-blocking.
       
   // observers
