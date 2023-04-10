@@ -423,22 +423,23 @@ public:
   template<typename... Args> bool try_emplace(key_type&& k, Args&&... args);
   template<class K, typename... Args> bool try_emplace(K&& k, Args&&... args);
   
-  template<typename F, typename... Args> bool try_emplace_or_visit(const key_type& k, F f, Args&&... args);
-  template<typename F, typename... Args> bool try_emplace_or_cvisit(const key_type& k, F f, Args&&... args);
-  template<typename F, typename... Args> bool try_emplace_or_visit(key_type&& k, F f, Args&&... args);
-  template<typename F, typename... Args> bool try_emplace_or_cvisit(key_type&& k, F f, Args&&... args);
-  template<class K, typename F, typename... Args> bool try_emplace_or_visit(K&& k, F f, Args&&... args);
-  template<class K, typename F, typename... Args> bool try_emplace_or_cvisit(K&& k, F f, Args&&... args);
+  template<typename... Args, typename F> bool try_emplace_or_visit(const key_type& k, Args&&... args, F&& f);
+  template<typename... Args, typename F> bool try_emplace_or_cvisit(const key_type& k, Args&&... args, F&& f);
+  template<typename... Args, typename F> bool try_emplace_or_visit(key_type&& k, Args&&... args, F&& f);
+  template<typename... Args, typename F> bool try_emplace_or_cvisit(key_type&& k, Args&&... args, F&& f);
+  template<class K, typename... Args, typename F> bool try_emplace_or_visit(K&& k, Args&&... args, F&& f);
+  template<class K, typename... Args, typename F> bool try_emplace_or_cvisit(K&& k, Args&&... args, F&& f);
   // Effects: Tries to emplace an element piecewise-constructed from k and args... If an equivalent
   // element already exists, passes a reference to it to f.
   // Returns: true iff emplacement took place.
+  // Note: interface is exposition only (C++ would not allow f arg after variadic pack).
 
   template<typename M> bool insert_or_assign(const key_type& k, M&& obj);
   template<typename M> bool insert_or_assign(key_type&& k, M&& obj);
   template<typename K, typename M> bool insert_or_assign(K&& k, M&& obj);
   
-  template<typename F, typename... Args> bool emplace_or_visit(F f, Args&&... args);
-  template<typename F, typename... Args> bool emplace_or_cvisit(F f, Args&&... args);
+  template<typename... Args, typename F> bool emplace_or_visit(Args&&... args, F&& f);
+  template<typename... Args, typename F> bool emplace_or_cvisit(Args&&... args, F&& f);
   template<typename F> bool insert_or_visit(const value_type& obj, F f);
   template<typename F> bool insert_or_cvisit(const value_type& obj, F f);
   template<typename F> bool insert_or_visit(const init_type& obj, F f);
@@ -450,6 +451,7 @@ public:
   // Effects: Tries to emplace/insert an element constructed from args.../obj. If an equivalent
   // element already exists, passes a reference to it to f.
   // Returns: true iff emplacement/insertion took place.
+  // Note: emplace_or_[c]visit interface is exposition only (C++ would not allow f arg after variadic pack).
   
   template<typename InputIterator,typename F>
     void insert_or_visit(InputIterator first, InputIterator last, F f);
