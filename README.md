@@ -461,7 +461,7 @@ public:
   // Effects: this->insert_or_[c]visit(il.begin(), il.end(), f);
   
   size_type erase(const key_type& k);
-  template<typename K> size_type erase(K&& k);
+  template<typename K> size_type erase(const K& k);
   
   template<typename F> size_type erase_if(const key_type& k, F f);
   template<typename K, typename F> size_type erase_if(const K& k, F f);
