@@ -380,12 +380,9 @@ public:
   template<typename F> std::size_t visit(const key_type& k, F f);
   template<typename F> std::size_t visit(const key_type& k, F f) const;
   template<typename F> std::size_t cvisit(const key_type& k, F f) const;
-  template<typename F> std::size_t visit(key_type&& k, F f);
-  template<typename F> std::size_t visit(key_type&& k, F f) const;
-  template<typename F> std::size_t cvisit(key_type&& k, F f) const;
-  template<typename K,typename F> std::size_t visit(K&& k, F f);
-  template<typename K,typename F> std::size_t visit(K&& k, F f) const;
-  template<typename K,typename F> std::size_t cvisit(K&& k, F f) const;
+  template<typename K,typename F> std::size_t visit(const K& k, F f);
+  template<typename K,typename F> std::size_t visit(const K& k, F f) const;
+  template<typename K,typename F> std::size_t cvisit(const K& k, F f) const;
   // Effects: If an element equivalent to k is found, passes a (const) reference to it to f.
   // Returns: Number of elements visited (0 or 1).
   
@@ -467,8 +464,7 @@ public:
   template<typename K> size_type erase(K&& k);
   
   template<typename F> size_type erase_if(const key_type& k, F f);
-  template<typename F> size_type erase_if(key_type&& k, F f);
-  template<typename K, typename F> size_type erase_if(K&& k, F f);
+  template<typename K, typename F> size_type erase_if(const K& k, F f);
   // Effects: If an element equivalent to k is found, passes a reference to it to f
   // and erases it if f returns true.
   // Returns: Number of elements erased (0 or 1).
