@@ -495,7 +495,7 @@ public:
     void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>& x);
   template<typename H2, typename P2>
     void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>&& x);
-  // Concurrency: Non-blocking.
+  // Concurrency: Blocking on *this and x.
       
   // observers
   hasher hash_function() const;
