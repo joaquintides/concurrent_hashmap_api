@@ -333,7 +333,7 @@ public:
                                const hasher& hf = hasher(),
                                const key_equal& eql = key_equal(),
                                const allocator_type& a = allocator_type());
-  template<typenamme InputIterator>
+  template<typename InputIterator>
     concurrent_flat_map(InputIterator f, InputIterator l,
                         size_type n = implementation-defined,
                         const hasher& hf = hasher(),
