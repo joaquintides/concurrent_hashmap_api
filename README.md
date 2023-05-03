@@ -507,6 +507,9 @@ public:
   bool contains(const key_type& k) const;
   template<typename K> bool contains(const K& k) const;  
   
+   // bucket interface
+  size_type bucket_count() const noexcept;
+    
   // hash policy
   float load_factor() const noexcept;
   float max_load_factor() const noexcept;
