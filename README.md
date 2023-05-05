@@ -377,18 +377,18 @@ public:
   allocator_type get_allocator() const noexcept;    
   
   // visitation
-  template<typename F> std::size_t visit(const key_type& k, F f);
-  template<typename F> std::size_t visit(const key_type& k, F f) const;
-  template<typename F> std::size_t cvisit(const key_type& k, F f) const;
-  template<typename K,typename F> std::size_t visit(const K& k, F f);
-  template<typename K,typename F> std::size_t visit(const K& k, F f) const;
-  template<typename K,typename F> std::size_t cvisit(const K& k, F f) const;
+  template<typename F> size_type visit(const key_type& k, F f);
+  template<typename F> size_type visit(const key_type& k, F f) const;
+  template<typename F> size_type cvisit(const key_type& k, F f) const;
+  template<typename K,typename F> size_type visit(const K& k, F f);
+  template<typename K,typename F> size_type visit(const K& k, F f) const;
+  template<typename K,typename F> size_type cvisit(const K& k, F f) const;
   // Effects: If an element equivalent to k is found, passes a (const) reference to it to f.
   // Returns: Number of elements visited (0 or 1).
   
-  template<typename F> std::size_t visit_all(F f);
-  template<typename F> std::size_t visit_all(F f) const;
-  template<typename F> std::size_t cvisit_all(F f) const;
+  template<typename F> size_type visit_all(F f);
+  template<typename F> size_type visit_all(F f) const;
+  template<typename F> size_type cvisit_all(F f) const;
   // Effects: Successively passes (const) references to all the elements in the
   // container to f.
   // Returns: Number of elements visited.
@@ -413,8 +413,12 @@ public:
   bool insert(const init_type& obj);
   bool insert(value_type&& obj);
   bool insert(init_type&& obj);
-  template<typename InputIterator> void insert(InputIterator first, InputIterator last);
-  void insert(std::initializer_list<value_type> il);  
+  
+  template<typename InputIterator> size_type insert(InputIterator first, InputIterator last);
+  // Effects: while(first != last) this->insert_or_[c]visit(*first++, f);
+  // Return: number of elements inserted
+
+  size_type insert(std::initializer_list<value_type> il);
 
   template<typename... Args, typename F> bool emplace_or_visit(Args&&... args, F&& f);
   template<typename... Args, typename F> bool emplace_or_cvisit(Args&&... args, F&& f);
@@ -432,10 +436,16 @@ public:
   // Note: emplace_or_[c]visit interface is exposition only (C++ would not allow f arg after variadic pack).
   
   template<typename InputIterator,typename F>
-    void insert_or_visit(InputIterator first, InputIterator last, F f);
+    size_type insert_or_visit(InputIterator first, InputIterator last, F f);
   template<typename InputIterator,typename F>
-    void insert_or_cvisit(InputIterator first, InputIterator last, F f);
+    size_type insert_or_cvisit(InputIterator first, InputIterator last, F f);
   // Effects: while(first != last) this->insert_or_[c]visit(*first++, f);
+  // Returns: number of elements inserted.
+
+  template<typename F> size_type insert_or_visit(std::initializer_list<value_type> il, F f);
+  template<typename F> size_type insert_or_cvisit(std::initializer_list<value_type> il, F f);
+  // Effects: this->insert_or_[c]visit(il.begin(), il.end(), f);
+  // Returns: number of elements inserted.
 
   template<typename... Args> bool try_emplace(const key_type& k, Args&&... args);
   template<typename... Args> bool try_emplace(key_type&& k, Args&&... args);
@@ -455,11 +465,7 @@ public:
   template<typename M> bool insert_or_assign(const key_type& k, M&& obj);
   template<typename M> bool insert_or_assign(key_type&& k, M&& obj);
   template<typename K, typename M> bool insert_or_assign(K&& k, M&& obj);
-  
-  template<typename F> void insert_or_visit(std::initializer_list<value_type> il, F f);
-  template<typename F> void insert_or_cvisit(std::initializer_list<value_type> il, F f);
-  // Effects: this->insert_or_[c]visit(il.begin(), il.end(), f);
-  
+    
   size_type erase(const key_type& k);
   template<typename K> size_type erase(const K& k);
   
@@ -492,9 +498,10 @@ public:
   // Concurrency: Blocking.
 
   template<typename H2, typename P2>
-    void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>& x);
+    size_type merge(concurrent_flat_map<Key, T, H2, P2, Allocator>& x);
   template<typename H2, typename P2>
-    void merge(concurrent_flat_map<Key, T, H2, P2, Allocator>&& x);
+    size_type merge(concurrent_flat_map<Key, T, H2, P2, Allocator>&& x);
+  // Returns: Number of elements transferred.
   // Concurrency: Blocking on *this and x.
       
   // observers
